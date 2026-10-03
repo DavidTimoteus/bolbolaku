@@ -1,0 +1,7 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="72" fill="#0b1220"/>
+  <circle cx="256" cy="256" r="176" fill="#16a34a"/>
+  <path d="M256 80 336 136l-64 192h-64l64-192z" fill="#a3e635"/>
+  <text x="256" y="256" font-family="Arial, sans-serif" font-size="72" font-weight="700"
+        fill="#f8fafc" text-anchor="middle" dominant-baseline="middle">BBK</text>
+</svg>
