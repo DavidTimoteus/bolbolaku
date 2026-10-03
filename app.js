@@ -333,8 +333,10 @@ function matchCard(f) {
   } else if (showScore) {
     mid = `<span class="match__score">${f.homeScore}<i>·</i>${f.awayScore}</span>`;
   } else {
+    const when = f.timeTBD ? 'TBD' : WIB.format(new Date(f.dateUTC));
     mid = `<span class="match__vs">VS</span>
-           <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>`;
+           <span class="match__clock${f.timeTBD ? ' match__clock--tbd' : ''}"
+                 ${f.timeTBD ? 'title="Jam kick-off belum diumumkan"' : ''}>${when}</span>`;
   }
 
   // Baris meta HANYA untuk laga selesai. Menit berjalan sudah tampil di
@@ -574,8 +576,10 @@ let cdTimer = null;
 
 function nextKickoff() {
   const now = Date.now();
+  // Laga tanpa jam resmi (00:00Z dari FIFA) TIDAK boleh jadi "laga
+  // berikutnya": menghitung mundur ke jam karangan itu menyesatkan.
   const upcoming = state.fixtures
-    .filter((f) => !f.finished && new Date(f.dateUTC).getTime() > now)
+    .filter((f) => !f.finished && !f.timeTBD && new Date(f.dateUTC).getTime() > now)
     .sort((a, b) => a.dateUTC.localeCompare(b.dateUTC));
   return upcoming[0] || null;
 }

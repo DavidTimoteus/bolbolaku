@@ -183,6 +183,10 @@ function normalizeEspn(ev, comp) {
     awayScore: showScore ? aScore : null,
     state,
     finished,
+    // ESPN memberi penanda RESMI apakah jam kick-off sudah sah. Kalau
+    // `timeValid === false`, jam itu belum bisa dipercaya dan kartu harus
+    // menampilkan "TBD" — bukan jam tebakan.
+    timeTBD: c?.timeValid === false,
     detail: statusType.shortDetail || statusType.detail || '',
     venue: c?.venue?.fullName || '',
     city: '',
@@ -228,6 +232,18 @@ function normalizeFifa(m) {
   const hScore = Number.isFinite(m.HomeTeamScore) ? m.HomeTeamScore : null;
   const aScore = Number.isFinite(m.AwayTeamScore) ? m.AwayTeamScore : null;
 
+  // FIFA mengirim Date dengan jam 00:00:00Z ketika jam kick-off BELUM
+  // dipublikasikan. Menampilkannya sebagai "07.00 WIB" adalah kebohongan
+  // yang terbaca sebagai bug data (puluhan laga "pagi buta" sekaligus).
+  //
+  // PENTING: aturan ini hanya untuk FIFA. ESPN juga memakai 00:00Z, tapi di
+  // sana itu jam yang SAH — mis. "Haiti at Costa Rica 2026-10-05T00:00Z" =
+  // 20:00 EDT, dan ESPN menandainya timeValid=true. Menerapkan aturan FIFA
+  // ke ESPN akan menghapus jam yang benar-benar valid.
+  const dUtc = m.Date ? new Date(m.Date) : null;
+  const timeTBD = !dUtc || Number.isNaN(dUtc.getTime()) ||
+    (dUtc.getUTCHours() === 0 && dUtc.getUTCMinutes() === 0 && dUtc.getUTCSeconds() === 0);
+
   const compName = fifaText(m.CompetitionName) || 'FIFA';
   const cls = classifyComp(compName);
   // Babak: StageName sering hanya mengulang nama kompetisi; GroupName memuat
@@ -252,6 +268,7 @@ function normalizeFifa(m) {
     compLabel: cls.label,
     stage,
     dateUTC: m.Date,
+    timeTBD,
     home: homeName,
     away: awayName,
     homeLogo: fifaLogo(home),
