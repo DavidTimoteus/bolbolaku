@@ -195,13 +195,34 @@ function applyFilters() {
    Render
    ================================================================== */
 function statusPill(f) {
-  if (f.state === 'in') return '<span class="status status--live">Live</span>';
+  // Menit berjalan ditampilkan untuk laga live — ini sinyal yang paling
+  // dicari pengguna ("berapa menit lagi?"). `detail` ESPN berisi "87'"
+  // atau "45'+2"; FIFA memakai MatchTime. Tanpa ini, laga live hanya
+  // berlabel "Live" tanpa konteks waktu.
+  if (f.state === 'in') {
+    const min = String(f.detail || '').replace(/[^\d'+]/g, '').slice(0, 6);
+    return `<span class="status status--live">${min || 'Live'}</span>`;
+  }
   if (f.finished) return '<span class="status status--ft">Full Time</span>';
   return '';
 }
 
 function isNational(f) {
   return f.compKind === 'national' || f.compGroup === 'nasional';
+}
+
+/**
+ * Apakah label babak layak ditampilkan di kartu?
+ *
+ * "Final", "Semifinal", "Perempat Final", "Grup B" membawa informasi nyata.
+ * Tapi "Regular Season" dan "Preliminary Round" muncul identik di puluhan
+ * kartu berurutan — itu noise, bukan sinyal, dan membuat daftar terasa
+ * seperti template yang belum jadi. Label generik disembunyikan.
+ */
+function notableStage(stage) {
+  const s = String(stage || '').trim();
+  if (!s) return false;
+  return !/^(regular\s*season|preliminary\s*round|1st\s*preliminary\s*round|first\s*round|league\s*stage|table)$/i.test(s);
 }
 
 /**
@@ -295,7 +316,7 @@ function matchCard(f) {
       <div class="match__head">
         <span class="match__badge" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
         <span class="match__compname" title="${esc(f.compName)}">${esc(f.compName)}</span>
-        ${f.stage ? `<span class="match__stage">${esc(f.stage)}</span>` : ''}
+        ${notableStage(f.stage) ? `<span class="match__stage">${esc(f.stage)}</span>` : ''}
       </div>`;
 
   const article = (kindClass, body) => `
