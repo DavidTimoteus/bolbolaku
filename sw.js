@@ -4,12 +4,12 @@
  * Strategi:
  *  - App shell (HTML/CSS/JS/ikon): cache-first, diperbarui di belakang.
  *    Shell kecil & statis, jadi aman.
- *  - Jadwal ESPN: TIDAK di-cache lewat SW (api.js sudah menangani cache
- *    sendiri dengan TTL + stale-while-revalidate). Double-caching akan
+ *  - Jadwal (ESPN + FIFA): TIDAK di-cache lewat SW (api.js sudah menangani
+ *    cache sendiri dengan TTL + stale-while-revalidate). Double-caching akan
  *    membuat data basi sulit dipurge.
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `bolbolaku-shell-${VERSION}`;
 
 const ASSETS = [
@@ -20,6 +20,7 @@ const ASSETS = [
   './api.js',
   './config.js',
   './country-map.js',
+  './competitions.js',
   './manifest.webmanifest',
   './assets/icon.svg',
 ];

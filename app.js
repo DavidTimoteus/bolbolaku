@@ -22,6 +22,7 @@ const state = {
   online: navigator.onLine,
 
   group: 'semua',
+  kind: '',                // '', 'national', 'club-cup', 'league'
   comps: new Set(),        // id kompetisi aktif
   country: '',
   team: '',
@@ -165,6 +166,9 @@ function applyFilters() {
     // kompetensi spesifik
     if (state.comps.size && !state.comps.has(f.compId)) return false;
 
+    // jenis kompetisi (timnas / piala antarklub / liga)
+    if (state.kind && f.compKind !== state.kind) return false;
+
     // negara
     if (state.country) {
       if (countryOf(f.home) !== state.country && countryOf(f.away) !== state.country) return false;
@@ -200,7 +204,7 @@ function statusPill(f) {
 }
 
 function isNational(f) {
-  return f.compGroup === 'nasional';
+  return f.compKind === 'national' || f.compGroup === 'nasional';
 }
 
 /**
@@ -235,24 +239,33 @@ window.bbkLogoErr = (img) => {
   img.replaceWith(s);
 };
 
+/**
+ * Kartu pertandingan — TIGA tata letak berbeda menurut jenis kompetisi.
+ *
+ * Mengapa berbeda: laga timnas (mis. final ASEAN Cup Indonesia vs Thailand),
+ * laga piala antarklub (UCL/UEL), dan laga liga domestik punya konteks yang
+ * berbeda. Menampilkannya identik membuat pengguna bingung membedakan mana
+ * yang turnamen dan mana yang liga — keluhan yang sah.
+ *
+ *   kind = 'national'  -> kartu bendera: dua panji negara + nama negara
+ *   kind = 'club-cup'  -> kartu turnamen: pita babak (Final/Semifinal) +
+ *                         label "Antarklub" yang menonjol
+ *   kind = 'league'    -> kartu liga ringkas: kresta + nama klub (default)
+ */
 function matchCard(f) {
   const live = f.state === 'in';
-  // Skor hanya tampil kalau pertandingan sudah mulai/selesai. Placeholder
-  // "–" sengaja dihapus: ia terbaca seperti teks rusak, bukan informasi.
   const showScore = (live || f.finished) &&
     f.homeScore !== null && f.awayScore !== null;
 
-  // Tim yang memimpin dicetak tebal. Tanpa pembeda, laga selesai tampil
-  // rata dan tidak bisa dipindai sekilas.
   const hLead = showScore && f.homeScore > f.awayScore;
   const aLead = showScore && f.awayScore > f.homeScore;
   const score = (v, lead) => (showScore
     ? `<span class="team__score${lead ? ' is-lead' : ''}">${v}</span>`
     : '');
 
-  // Untuk timnas, nama negara == nama tim ("Fiji" / "Fiji") — mubazir.
-  // Label negara hanya berguna untuk KLUB, jadi sembunyikan di timnas.
-  const nat = f.compGroup === 'nasional';
+  // Label negara hanya bermakna untuk KLUB. Untuk timnas, nama tim == nama
+  // negara ("Fiji" / "Fiji") sehingga label itu mubazir.
+  const nat = f.compKind === 'national';
   const homeC = nat ? '' : countryOf(f.home);
   const awayC = nat ? '' : countryOf(f.away);
 
@@ -263,8 +276,6 @@ function matchCard(f) {
     + `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/></svg>`
     + `</button>`;
 
-  // Satu baris tim: nama (+ negara kecil di bawahnya) dan skor sejajar
-  // kanan. Grid 2 kolom membuat semua skor berbaris rapi antar kartu.
   const team = (name, ctry, cls, sc, logo) => `
       <div class="team ${cls}">
         ${logoHTML(logo, name)}
@@ -275,23 +286,75 @@ function matchCard(f) {
         ${sc}
       </div>`;
 
-  return `
-  <li>
-    <article class="match${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}" data-id="${esc(f.id)}">
-      <div class="match__meta">
-        <span class="match__comp" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
+  const timeBlock = `
         <span class="match__time">
           <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>
           ${statusPill(f)}
-        </span>
+        </span>`;
+
+  // Pita identitas kompetisi — satu-satunya elemen yang selalu tampil dan
+  // membuat tiap jenis laga bisa dibedakan sekilas.
+  const ribbon = `
+      <div class="match__ribbon">
+        <span class="match__badge" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
+        <span class="match__compname" title="${esc(f.compName)}">${esc(f.compName)}</span>
+        ${f.stage ? `<span class="match__stage">${esc(f.stage)}</span>` : ''}
+      </div>`;
+
+  const article = (kindClass, body) => `
+  <li>
+    <article class="match ${kindClass}${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}"
+             data-id="${esc(f.id)}" data-kind="${esc(f.compKind || 'league')}">
+      ${ribbon}
+      ${body}
+      ${star}
+    </article>
+  </li>`;
+
+  // ---------- (A) TIMNAS / TURNAMEN ANTARNEGARA ----------
+  if (nat) {
+    return article('match--national', `
+      <div class="match__body">
+        <div class="match__side match__side--home">
+          ${logoHTML(f.homeLogo, f.home)}
+          <span class="match__nation" title="${esc(f.home)}">${esc(f.home)}</span>
+        </div>
+        <div class="match__center">
+          ${showScore
+            ? `<span class="match__score">${f.homeScore}<i>–</i>${f.awayScore}</span>`
+            : timeBlock}
+        </div>
+        <div class="match__side match__side--away">
+          ${logoHTML(f.awayLogo, f.away)}
+          <span class="match__nation" title="${esc(f.away)}">${esc(f.away)}</span>
+        </div>
+      </div>
+      ${showScore ? `<div class="match__foot">${timeBlock}</div>` : ''}`);
+  }
+
+  // ---------- (B) PIALA ANTARKLUB (UCL / UEL / Libertadores) ----------
+  if (f.compKind === 'club-cup') {
+    return article('match--cup', `
+      <div class="match__meta">
+        <span class="match__tag">${esc(f.compLabel)}</span>
+        ${timeBlock}
       </div>
       <div class="match__teams">
         ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
         ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
+      </div>`);
+  }
+
+  // ---------- (C) LIGA DOMESTIK (default) ----------
+  return article('match--league', `
+      <div class="match__meta">
+        <span class="match__tag">${esc(f.compLabel)}</span>
+        ${timeBlock}
       </div>
-      ${star}
-    </article>
-  </li>`;
+      <div class="match__teams">
+        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
+        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
+      </div>`);
 }
 
 function renderList(list) {
@@ -390,6 +453,21 @@ function renderFilters() {
       ${esc(c.short)}<span class="chip__count">${n}</span></button>`;
   }).join('');
 
+  // Jenis kompetisi — inilah yang membuat "timnas vs liga vs piala" bisa
+  // dipisahkan, bukan sekadar diwarnai berbeda.
+  const KIND_DEFS = [
+    { id: '',         label: 'Semua' },
+    { id: 'national', label: 'Timnas' },
+    { id: 'club-cup', label: 'Piala' },
+    { id: 'league',   label: 'Liga' },
+  ];
+  const kindCount = (id) => state.fixtures.filter((f) => !id || f.compKind === id).length;
+  $('#kindstrip').innerHTML = KIND_DEFS.map((k) => {
+    const n = kindCount(k.id);
+    return `<button class="chip" aria-pressed="${state.kind === k.id}" data-kind="${k.id}">
+      ${esc(k.label)}<span class="chip__count">${n}</span></button>`;
+  }).join('');
+
   // Negara — DAFTAR LENGKAP. Negara yang punya jadwal 3 hari tampil lebih
   // dulu (dengan jumlah), diikuti seluruh negara lain menurut abjad. Dengan
   // cara ini negara seperti Indonesia selalu ada di dropdown, walau liganya
@@ -456,6 +534,7 @@ function update() {
 function syncUrl() {
   const p = new URLSearchParams();
   if (state.group !== 'semua') p.set('g', state.group);
+  if (state.kind) p.set('k', state.kind);
   if (state.comps.size) p.set('c', Array.from(state.comps).join(','));
   if (state.country) p.set('n', state.country);
   if (state.team) p.set('t', state.team);
@@ -468,6 +547,7 @@ function syncUrl() {
 function readUrl() {
   const p = new URLSearchParams(location.search);
   state.group = p.get('g') || 'semua';
+  state.kind = p.get('k') || '';
   state.comps = new Set((p.get('c') || '').split(',').filter(Boolean));
   state.country = p.get('n') || '';
   state.team = p.get('t') || '';
@@ -626,6 +706,14 @@ function bind() {
     if (!b) return;
     const id = b.dataset.comp;
     if (state.comps.has(id)) state.comps.delete(id); else state.comps.add(id);
+    update();
+  });
+
+  // Jenis kompetisi
+  $('#kindstrip').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-kind]');
+    if (!b) return;
+    state.kind = b.dataset.kind;
     update();
   });
 

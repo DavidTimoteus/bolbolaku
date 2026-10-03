@@ -67,6 +67,12 @@
         <div class="strip" id="groupstrip" role="tablist" aria-labelledby="lbl-group"></div>
       </div>
 
+      <!-- Jenis kompetisi: Timnas / Piala / Liga -->
+      <div class="filterrow">
+        <span class="filterrow__label" id="lbl-kind">Jenis</span>
+        <div class="strip" id="kindstrip" role="group" aria-labelledby="lbl-kind"></div>
+      </div>
+
       <!-- Liga spesifik. Wrapper memberi affordance "masih ada lagi" saat
            strip terpotong di layar sempit. -->
       <div class="filterrow">
@@ -107,7 +113,7 @@
 
     <!-- Countdown kick-off berikutnya -->
     <div class="countdown" id="countdown" hidden>
-      <span class="countdown__label">Kick-off terdekat</span>
+      <span class="countdown__label">Laga berikutnya dimulai dalam</span>
       <span class="countdown__clock" id="cd-clock">--:--:--</span>
       <span class="countdown__teams" id="cd-teams"></span>
       <span class="countdown__meta" id="cd-meta"></span>

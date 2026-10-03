@@ -25,7 +25,7 @@ export const CONFIG = {
   refreshMs: 5 * 60 * 1000,
 
   /** Kunci cache di localStorage. Bump version kalau bentuk data berubah. */
-  cacheKey: 'bolbolaku.fixtures.v1',
+  cacheKey: 'bolbolaku.fixtures.v2',
   prefsKey: 'bolbolaku.prefs.v1',
 
   /** Zona waktu tampilan — dikunci WIB (UTC+7) sesuai permintaan. */
@@ -43,6 +43,18 @@ export const CONFIG = {
     base: 'https://site.api.espn.com/apis/site/v2/sports/soccer',
     timeoutMs: 12000,
     retries: 2,
+
+    /**
+     * Sumber KEDUA: FIFA api resmi.
+     * Dipakai karena ESPN tidak memuat seluruh turnamen resmi FIFA —
+     * mis. FIFA ASEAN Cup (final Indonesia vs Thailand) tidak ada di ESPN.
+     * Satu request mencakup SELURUH rentang tanggal, jadi murah.
+     */
+    fifaBase: 'https://api.fifa.com/api/v3',
+    fifaCount: 500,
+
+    /** Offset WIB (menit) untuk mengelompokkan laga per hari lokal. */
+    utcOffsetMinutes: 7 * 60,
   },
 
   /**
