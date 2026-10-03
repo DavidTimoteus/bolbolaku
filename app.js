@@ -289,10 +289,10 @@ function matchCard(f) {
           ${statusPill(f)}
         </span>`;
 
-  // Pita identitas kompetisi — satu-satunya elemen yang selalu tampil dan
-  // membuat tiap jenis laga bisa dibedakan sekilas.
-  const ribbon = `
-      <div class="match__ribbon">
+  // Kepala kartu — pita identitas kompetisi. Satu-satunya elemen yang
+  // selalu tampil, sehingga tiap jenis laga bisa dibedakan sekilas.
+  const head = `
+      <div class="match__head">
         <span class="match__badge" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
         <span class="match__compname" title="${esc(f.compName)}">${esc(f.compName)}</span>
         ${f.stage ? `<span class="match__stage">${esc(f.stage)}</span>` : ''}
@@ -302,55 +302,46 @@ function matchCard(f) {
   <li>
     <article class="match ${kindClass}${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}"
              data-id="${esc(f.id)}" data-kind="${esc(f.compKind || 'league')}">
-      ${ribbon}
+      ${head}
       ${body}
       ${star}
     </article>
   </li>`;
 
   // ---------- (A) TIMNAS / TURNAMEN ANTARNEGARA ----------
+  // Dua panji berhadapan simetris. Skor besar di tengah saat laga
+  // berjalan/selesai; jam kick-off saat belum mulai.
   if (nat) {
+    const mid = showScore
+      ? `<span class="match__score">${f.homeScore}<i>–</i>${f.awayScore}</span>
+         <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>`
+      : timeBlock;
     return article('match--national', `
-      <div class="match__body">
+      <div class="match__duel">
         <div class="match__side match__side--home">
           ${logoHTML(f.homeLogo, f.home)}
           <span class="match__nation" title="${esc(f.home)}">${esc(f.home)}</span>
         </div>
-        <div class="match__center">
-          ${showScore
-            ? `<span class="match__score">${f.homeScore}<i>–</i>${f.awayScore}</span>`
-            : timeBlock}
-        </div>
+        <div class="match__mid">${mid}</div>
         <div class="match__side match__side--away">
           ${logoHTML(f.awayLogo, f.away)}
           <span class="match__nation" title="${esc(f.away)}">${esc(f.away)}</span>
         </div>
-      </div>
-      ${showScore ? `<div class="match__foot">${timeBlock}</div>` : ''}`);
-  }
-
-  // ---------- (B) PIALA ANTARKLUB (UCL / UEL / Libertadores) ----------
-  if (f.compKind === 'club-cup') {
-    return article('match--cup', `
-      <div class="match__meta">
-        <span class="match__tag">${esc(f.compLabel)}</span>
-        ${timeBlock}
-      </div>
-      <div class="match__teams">
-        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
-        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
       </div>`);
   }
 
-  // ---------- (C) LIGA DOMESTIK (default) ----------
-  return article('match--league', `
-      <div class="match__meta">
-        <span class="match__tag">${esc(f.compLabel)}</span>
-        ${timeBlock}
-      </div>
-      <div class="match__teams">
-        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
-        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
+  // ---------- (B) PIALA ANTARKLUB (UCL / UEL / Libertadores) ----------
+  // (C) LIGA DOMESTIK (default)
+  // Waktu kick-off jadi kolom KIRI yang tetap — pola "scoreboard" yang
+  // dipakai FotMob/Flashscore: mata memindai jam lebih dulu, lalu tim.
+  const kindClass = f.compKind === 'club-cup' ? 'match--cup' : 'match--league';
+  return article(kindClass, `
+      <div class="match__body">
+        <div class="match__when">${timeBlock}</div>
+        <div class="match__teams">
+          ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
+          ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
+        </div>
       </div>`);
 }
 
@@ -716,6 +707,17 @@ function bind() {
     if (!b) return;
     state.kind = b.dataset.kind;
     update();
+  });
+
+  // Panel saring lanjutan (dilipat secara bawaan supaya jadwal terlihat
+  // di layar pertama). aria-expanded menjaga aksesibilitas.
+  $('#advtoggle').addEventListener('click', () => {
+    const btn = $('#advtoggle');
+    const panel = $('#advpanel');
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    panel.hidden = open;
+    if (!open) markOverflowingStrips();
   });
 
   // Negara / klub

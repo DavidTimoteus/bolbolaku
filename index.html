@@ -61,47 +61,56 @@
   <nav class="filters" aria-label="Filter jadwal">
     <div class="filters__inner">
 
-      <!-- Grup -->
-      <div class="filterrow">
-        <span class="filterrow__label" id="lbl-group">Kompetisi</span>
-        <div class="strip" id="groupstrip" role="tablist" aria-labelledby="lbl-group"></div>
-      </div>
+      <!-- Baris tetap: jenis kompetisi + rentang hari + favorit + panel
+           lanjutan. Ramping, supaya jadwal sudah terlihat di layar pertama. -->
+      <div class="filterbar">
+        <div class="strip" id="kindstrip" role="group" aria-label="Jenis kompetisi"></div>
 
-      <!-- Jenis kompetisi: Timnas / Piala / Liga -->
-      <div class="filterrow">
-        <span class="filterrow__label" id="lbl-kind">Jenis</span>
-        <div class="strip" id="kindstrip" role="group" aria-labelledby="lbl-kind"></div>
-      </div>
-
-      <!-- Liga spesifik. Wrapper memberi affordance "masih ada lagi" saat
-           strip terpotong di layar sempit. -->
-      <div class="filterrow">
-        <span class="filterrow__label" id="lbl-comp">Liga</span>
-        <div class="strip-wrap">
-          <div class="strip" id="compstrip" aria-labelledby="lbl-comp"></div>
-        </div>
-      </div>
-
-      <!-- Negara / klub / rentang -->
-      <div class="filterrow">
-        <span class="filterrow__label" id="lbl-more">Saring</span>
-
-        <label class="sr-only" for="country">Negara</label>
-        <select id="country" class="select" aria-labelledby="lbl-more"></select>
-
-        <label class="sr-only" for="team">Klub atau tim</label>
-        <select id="team" class="select"></select>
+        <span class="filterbar__sep" aria-hidden="true"></span>
 
         <div class="strip" id="ranges" role="group" aria-label="Rentang hari">
           <button class="chip" data-range="1">Hari ini</button>
           <button class="chip" data-range="3">3 hari</button>
         </div>
 
-        <button class="chip" id="favonly" aria-pressed="false">
+        <button class="chip chip--toggle" id="favonly" aria-pressed="false">
           <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/>
           </svg>Favorit
         </button>
+
+        <button class="chip chip--toggle" id="advtoggle" aria-expanded="false"
+                aria-controls="advpanel">
+          <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M7 12h10M10 18h4"/>
+          </svg>Saring
+        </button>
+      </div>
+
+      <!-- Panel lanjutan (dilipat): grup, liga spesifik, negara, klub. -->
+      <div class="filters__adv" id="advpanel" hidden>
+
+        <div class="filterrow">
+          <span class="filterrow__label" id="lbl-group">Wilayah</span>
+          <div class="strip" id="groupstrip" role="tablist" aria-labelledby="lbl-group"></div>
+        </div>
+
+        <div class="filterrow">
+          <span class="filterrow__label" id="lbl-comp">Liga</span>
+          <div class="strip-wrap">
+            <div class="strip" id="compstrip" aria-labelledby="lbl-comp"></div>
+          </div>
+        </div>
+
+        <div class="filterrow">
+          <span class="filterrow__label" id="lbl-more">Tim</span>
+
+          <label class="sr-only" for="country">Negara</label>
+          <select id="country" class="select" aria-labelledby="lbl-more"></select>
+
+          <label class="sr-only" for="team">Klub atau tim</label>
+          <select id="team" class="select"></select>
+        </div>
 
       </div>
 
