@@ -9,7 +9,7 @@
  *    membuat data basi sulit dipurge.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `bolbolaku-shell-${VERSION}`;
 
 const ASSETS = [
@@ -19,6 +19,7 @@ const ASSETS = [
   './app.js',
   './api.js',
   './config.js',
+  './country-map.js',
   './manifest.webmanifest',
   './assets/icon.svg',
 ];

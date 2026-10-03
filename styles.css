@@ -8,15 +8,15 @@
 :root {
   /* warna */
   --c-bg:          #0b1220;   /* colors.primary — canvas malam */
-  --c-surface:     #121b2e;   /* colors.surface */
-  --c-raised:      #1a2540;   /* colors.surfaceRaised */
-  --c-border:      #243352;   /* colors.border */
+  --c-surface:     #131d31;   /* colors.surface */
+  --c-raised:      #1b2744;   /* colors.surfaceRaised */
+  --c-border:      #2c3d60;   /* colors.border — cukup terang agar tepi kartu terbaca */
   --c-accent:      #16a34a;   /* colors.secondary — hijau lapangan */
   --c-accent-hi:   #a3e635;   /* colors.tertiary — lime lampu sorot */
   --c-danger:      #f26b6b;   /* colors.danger — lolos AA di bg/surface/raised */
   --c-live:        #f97316;   /* colors.live — sedang main */
   --c-text:        #f8fafc;   /* colors.textPrimary */
-  --c-text-2:      #94a3b8;   /* colors.textSecondary */
+  --c-text-2:      #a7b6cc;   /* colors.textSecondary — AA di surface */
   --c-text-3:      #8299b8;   /* colors.textMuted (WCAG AA, ratio 5.21) */
   --c-neutral:     #94a3b8;   /* colors.neutral */
 
@@ -44,7 +44,7 @@
   --e-none: none;
 
   /* lebar */
-  --w-max: 1200px;
+  --w-max: 1320px;
 
   /* skala huruf — dipakai badge, jam, skor */
   --fs-2xs: 0.6875rem;   /* 11px — label kecil */
@@ -227,7 +227,9 @@ button, input, select {
 .sync[data-state='offline'] .sync__dot { background: var(--c-danger); }
 .sync[data-state='loading'] .sync__dot { background: var(--c-live); }
 
-/* ---------- Countdown (satu-satunya elemen lime) ---------- */
+/* ---------- Countdown (satu-satunya elemen lime) ----------
+   Sengaja TIDAK mendominasi: ini informasi pendukung, bukan konten utama.
+   Judul & judul-hari harus lebih menonjol daripada timer. */
 .countdown {
   background: var(--c-raised);
   border: 1px solid var(--c-border);
@@ -235,37 +237,36 @@ button, input, select {
   padding: var(--s-sm) var(--s-md);
   display: flex;
   align-items: center;
-  gap: var(--s-md);
-  margin: 0 0 var(--s-md);
+  flex-wrap: wrap;
+  gap: var(--s-xs) var(--s-md);
+  margin: 0 0 var(--s-lg);
 }
 
 .countdown__label {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--c-text-3);
-  flex-shrink: 0;
 }
 
 .countdown__clock {
   font-family: var(--f-mono);
-  font-size: 20px;
-  font-weight: 500;
+  font-size: var(--fs-lg);
+  font-weight: 600;
   color: var(--c-accent-hi);
   letter-spacing: .02em;
-  /* angka mono tidak bergeser saat tick */
   font-variant-numeric: tabular-nums;
-  min-width: 7ch;
 }
 
+/* Tim + liga BOLEH membungkus; versi lama memaksa satu baris + ellipsis
+   sehingga muncul potongan seperti "Al..." yang terbaca seperti bug. */
 .countdown__meta {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--c-text-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1 1 12rem;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .countdown[hidden] { display: none; }
@@ -277,7 +278,7 @@ button, input, select {
   background: var(--c-bg);
   border-bottom: 1px solid var(--c-border);
   position: sticky;
-  top: 57px;
+  top: 60px;
   z-index: 15;
 }
 
@@ -354,7 +355,7 @@ button, input, select {
 .chip__badge {
   font-family: var(--f-mono);
   font-size: 10px;
-  opacity: .7;
+  color: var(--c-text-3);
 }
 
 .chip__icon {
@@ -370,32 +371,18 @@ button, input, select {
 /* Saat chip aktif (latar hijau pekat), bintang ikut terisi. */
 .chip[aria-pressed='true'] .chip__icon { fill: currentColor; }
 
+/* Jumlah pada chip. Warna eksplisit PER KEADAAN. Versi lama memakai satu
+   warna (--c-bg) untuk semua chip, sehingga angka nyaris tak terlihat di
+   chip yang tidak aktif. Memakai opacity juga menurunkan kontras < 4.5:1.
+   Karena itu: dua keadaan, dua warna. */
 .chip__count {
   font-size: 11px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  /* Jangan pakai opacity: itu menurunkan kontras ke ~3.3:1 dan gagal
-     WCAG AA. Warna eksplisit menjaga kontras tetap >= 4.5:1. */
   color: var(--c-text-3);
 }
 
-.chip[aria-pressed='true'] .chip__icon {
-  width: 13px;
-  height: 13px;
-  flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linejoin: round;
-}
-
-/* Saat chip aktif (latar hijau pekat), bintang ikut terisi. */
-.chip[aria-pressed='true'] .chip__icon { fill: currentColor; }
-
-.chip__count {
-  /* Opacity penuh: menurunkan alpha sedikit saja sudah menjatuhkan
-     kontras di bawah 4.5:1 karena latarnya hijau pekat. */
-  color: var(--c-bg);
-}
+.chip[aria-pressed='true'] .chip__count { color: rgba(6, 18, 10, .75); }
 
 /* Strip horizontal — bisa di-scroll, tetap bisa diklik */
 .strip {
@@ -435,6 +422,9 @@ button, input, select {
   width: 100%;
   margin: 0 auto;
   padding: var(--s-md);
+  /* Sisakan ruang di bawah agar kartu terakhir tidak menempel tepi layar
+     atau home-indicator iPhone. */
+  padding-bottom: calc(var(--s-xl) + env(safe-area-inset-bottom, 0px));
 }
 
 .daygroup { margin-bottom: var(--s-lg); }
@@ -450,8 +440,8 @@ button, input, select {
 
 .daygroup__date {
   font-family: var(--f-display);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 700;
   letter-spacing: -.01em;
 }
 
@@ -465,8 +455,8 @@ button, input, select {
 
 .daygroup__count {
   margin-left: auto;
-  font-size: 12px;
-  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -476,152 +466,152 @@ button, input, select {
   gap: var(--s-sm);
 }
 
-/* ---------- Kartu match ---------- */
+/* ---------- Kartu match ----------
+   Grid: badge | tim | waktu | bintang
+   Skor diletakkan di kolom sendiri (rata kanan) supaya SEMUA skor
+   berbaris rapi antar kartu — inilah yang membuat daftar bisa dipindai
+   sekilas, bukan deretan angka yang posisinya berubah-ubah. */
 .match {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: var(--s-sm);
-  padding: var(--s-sm) var(--s-md);
+  gap: var(--s-sm) var(--s-md);
+  padding: var(--s-md);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   box-shadow: var(--e-card);
-  transition: background .15s, border-color .15s;
+  transition: background var(--dur-1) var(--ease-out),
+              border-color var(--dur-1) var(--ease-out),
+              transform var(--dur-1) var(--ease-out);
 }
 
 .match:hover {
   background: var(--c-raised);
   border-color: var(--c-text-3);
+  transform: translateY(-1px);
 }
 
+/* Laga berlangsung: garis kiri oranye (bukan sekadar warna latar) supaya
+   tetap terbaca oleh pengguna yang tidak bisa membedakan warna. */
 .match--live {
-  background: var(--c-raised);
-  border-left: 3px solid var(--c-live);
-  padding-left: calc(var(--s-md) - 3px);
+  border-color: #7c4a24;
+  box-shadow: inset 3px 0 0 var(--c-live), var(--e-card);
 }
 
-/* Badge kompetisi */
+/* Laga selesai TIDAK diredupkan dengan opacity: opacity menurunkan kontras
+   teks di bawah WCAG AA. Pembedanya cukup badge "Full Time". */
+
 .match__comp {
   font-family: var(--f-mono);
-  font-size: 9px;
-  font-weight: 500;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
   letter-spacing: .04em;
-  color: var(--c-text-3);
+  color: var(--c-text-2);
   background: var(--c-bg);
   border: 1px solid var(--c-border);
   border-radius: var(--r-sm);
-  padding: 2px 5px;
+  padding: 3px 7px;
   text-align: center;
-  min-width: 38px;
-  flex-shrink: 0;
+  min-width: 44px;
+  align-self: start;
 }
 
-/* Tim & skor */
 .match__teams {
+  display: grid;
+  gap: 5px;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
+/* Satu baris tim: nama | negara | skor */
 .team {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
   gap: var(--s-sm);
   min-width: 0;
 }
 
 .team__name {
-  font-family: var(--f-display);
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   font-weight: 500;
-  line-height: 1.2;
-  /* Barlow Condensed rapat = muat di layar 320px tanpa ellipsis */
+  line-height: 1.3;
+  min-width: 0;
+  /* Bungkus maksimal 2 baris: nama panjang seperti "Milton Keynes Dons"
+     tampil utuh, bukan terpotong "Milton Keynes…". Nama tetap dibatasi 2
+     baris agar tinggi kartu tidak meledak dan grid tetap rata. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .team--home .team__name { font-weight: 600; }
 
+/* Negara di bawah-dalam baris tim; kecil tapi kontras tetap AA. */
+.team__country {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 10ch;
+}
+
 .team__score {
   font-family: var(--f-display);
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--fs-lg);
+  font-weight: 700;
   line-height: 1;
-  /* PUTIH, bukan merah. Merah berarti "galat/bahaya" — skor bukan bahaya.
-     Warna aksen (oranye) sudah dipakai khusus penanda LIVE, jadi skor
-     memakai warna teks utama supaya tidak ada tiga sinyal berebut. */
+  /* Putih: skor adalah data utama. Merah dilarang (berarti galat). */
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
-  min-width: 1.4ch;
-  text-align: center;
-  flex-shrink: 0;
+  min-width: 1.2ch;
+  text-align: right;
 }
 
-/* Tim yang memimpin: lebih tebal. Tanpa pembeda, laga yang sudah selesai
-   tampil rata dan tidak bisa dipindai sekilas. */
-.team__score.is-lead {
-  font-weight: 800;
-  color: var(--c-accent-hi);
-}
+/* Tim yang memimpin: lebih tebal + lime. */
+.team__score.is-lead { color: var(--c-accent-hi); font-weight: 800; }
 
-/* Laga selesai: sedikit lebih redup supaya mata langsung ke yang live. */
-.match--done { opacity: .82; }
-
-
-/* Jam WIB */
 .match__time {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  flex-shrink: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  align-self: start;
   text-align: right;
 }
 
 .match__clock {
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
-}
-
-.match__tz {
-  font-size: 9px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--c-text-3);
 }
 
 .status {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: var(--r-pill);
   white-space: nowrap;
 }
 
-.status--live { background: var(--c-live); color: var(--c-bg); }
-.status--final { background: var(--c-raised); color: var(--c-text-3); }
-.status--ft { background: var(--c-raised); color: var(--c-text-3); }
-
-/* Tanda timnas */
-.match__national {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 9px;
-  color: var(--c-accent-hi);
-  font-weight: 600;
+.status--live { background: var(--c-live); color: #0b1220; }
+.status--ft {
+  background: var(--c-bg);
+  color: var(--c-text-2);
+  border: 1px solid var(--c-border);
 }
+
+/* Bintang favorit kini kolom ke-4 di dalam kartu. */
+.match > .star { align-self: center; }
 
 /* ==========================================================================
    Empty / loading / error
@@ -653,7 +643,28 @@ button, input, select {
   max-width: 44ch;
 }
 
-.state--offline { border-left: 3px solid var(--c-danger); padding-left: var(--s-md); }
+.state--offline,
+.state--error {
+  border-left: 3px solid var(--c-danger);
+  padding-left: var(--s-md);
+  border-radius: var(--r-sm);
+}
+.state--error .state__icon { color: var(--c-danger); opacity: .8; }
+
+/* Tombol coba lagi — target sentuh 44px, jelas terlihat. */
+.state__retry {
+  margin-top: var(--s-sm);
+  min-height: 44px;
+  padding: 0 var(--s-lg);
+  background: var(--c-accent);
+  color: #06130b;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.state__retry:hover { background: var(--c-accent-hi); }
 
 /* Skeleton */
 .skel {
@@ -675,7 +686,7 @@ button, input, select {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: var(--s-lg);
+  bottom: calc(var(--s-lg) + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%) translateY(150%);
   background: var(--c-raised);
   border: 1px solid var(--c-border);
@@ -689,6 +700,10 @@ button, input, select {
 }
 
 .toast--show { transform: translateX(-50%) translateY(0); }
+
+/* Toast bersifat informasi: jangan pernah mencuri sentuhan dari kartu
+   di baliknya. */
+.toast { pointer-events: none; }
 
 /* ==========================================================================
    Footer
@@ -706,21 +721,24 @@ button, input, select {
 /* ==========================================================================
    Responsif — mobile-first
    320  → 1 kolom
-   768  → 2 kolom
-   1280 → 3 kolom
+   700  → 2 kolom
+   1100 → 3 kolom (daftar padat, bukan kartu raksasa)
+   Gutter bertambah seiring lebar supaya teks tidak menempel tepi di desktop.
    ========================================================================== */
-@media (min-width: 768px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-  .main { padding: var(--s-lg) var(--s-md); }
-  .brand__name { font-size: 1.75rem; }
+@media (min-width: 700px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-md); }
+  .main { padding: var(--s-lg) var(--s-lg); }
+  .filters__inner { padding: var(--s-sm) var(--s-lg); }
+  .header__bar { padding: var(--s-sm) var(--s-lg); }
+  .brand__name { font-size: 1.6rem; }
 }
 
-@media (min-width: 1280px) {
-  .grid { grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 1100px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .main { padding: var(--s-xl) var(--s-lg); }
 }
 
-@media (max-width: 767px) {
-  .header__bar { padding: var(--s-sm) var(--s-md); }
+@media (max-width: 699px) {
   .sync span:not(.sync__dot) { display: none; }  /* hemat ruang di HP */
   .filterrow__label { width: auto; }
 }
@@ -728,8 +746,9 @@ button, input, select {
 /* Layar pendek (HP landscape) — rapatkan agar tidak terpotong */
 @media (max-height: 480px) {
   .countdown { padding: var(--s-xs) var(--s-sm); margin-bottom: var(--s-sm); }
-  .countdown__clock { font-size: 17px; }
+  .countdown__clock { font-size: var(--fs-md); }
 }
+
 /* ------------------------------------------------------------------
    Affordance untuk strip yang meluber (skill: frontend-ui-engineering —
    jangan biarkan konten terpotong tanpa petunjuk bahwa ada lainnya).
@@ -903,21 +922,44 @@ button, input, select {
    baris memaksa halaman melebar. Biarkan baris Saring membungkus.
    ------------------------------------------------------------------ */
 @media (max-width: 560px) {
+  .filters { top: 56px; }
   /* Nama merek memakan lebar yang dibutuhkan kolom pencarian di 320px. */
   .brand__name { font-size: 1.05rem; }
   .brand__mark { width: 26px; height: 26px; }
   .iconbtn { width: 40px; height: 40px; }
 
-  .filterrow {
-    flex-wrap: wrap;
-  }
+  /* Filtr lebih rapat di HP: setiap piksel vertikal mahal karena layar
+     pendek. Label baris dibuat lebih kecil dan jarak dirapatkan. */
+  .filters__inner { gap: var(--s-xs); padding: var(--s-sm) var(--s-md); }
+  .filterrow { flex-wrap: wrap; gap: var(--s-xs); }
+  .filterrow__label { width: 100%; font-size: 9px; }
+  .filterrow > .select { flex: 1 1 45%; min-width: 0; }
 
-  .filterrow__label {
-    width: 100%;
+  /* KARTU: di 320px, 4 kolom (badge|tim|waktu|bintang) menyisakan ruang
+     begitu sempit sampai nama tim terpotong jadi "V…". Solusinya bukan
+     mengecilkan font, tapi menata ulang: baris atas = badge + waktu +
+     bintang, lalu tim memakai LEBAR PENUH di baris bawah. */
+  .match {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "comp time star"
+      "teams teams teams";
+    row-gap: var(--s-sm);
+    align-items: center;
   }
+  .match__comp { grid-area: comp; align-self: center; }
+  .match__time {
+    grid-area: time;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: end;
+    gap: var(--s-sm);
+    align-self: center;
+  }
+  .match > .star { grid-area: star; align-self: center; }
+  .match__teams { grid-area: teams; }
 
-  .filterrow > .select {
-    flex: 1 1 45%;
-    min-width: 0;
-  }
+  /* "Sabtu, 3 Oktober" membungkus jadi "Sabtu, 3 / Oktober" di 320px.
+     Perkecil sedikit supaya muat satu baris dan tidak pecah janggal. */
+  .daygroup__date { font-size: 1.2rem; }
 }

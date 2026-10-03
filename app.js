@@ -8,6 +8,7 @@
 
 import { CONFIG } from './config.js';
 import { loadFixtures } from './api.js';
+import { TEAM_COUNTRY } from './country-map.js';
 
 /* ==================================================================
    State
@@ -17,6 +18,7 @@ const state = {
   savedAt: 0,
   stale: false,
   loading: false,
+  loadFailed: false,      // true kalau sync gagal total (bukan sekadar kosong)
   online: navigator.onLine,
 
   group: 'semua',
@@ -65,6 +67,16 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
+}
+
+/**
+ * Negara sebuah tim. Peta utama (TEAM_COUNTRY) dibangun otomatis dari
+ * data ESPN oleh scripts/build_country_map.py — ratusan klub & timnas.
+ * Peta manual di CONFIG hanya cadangan untuk nama yang tak ada di sana.
+ */
+function countryOf(team) {
+  if (!team) return '';
+  return TEAM_COUNTRY[team] || CONFIG.teamCountry[String(team).toLowerCase()] || '';
 }
 
 /** Tanggal lokal (WIB) sebagai key YYYY-MM-DD. */
@@ -145,9 +157,7 @@ function applyFilters() {
 
     // negara
     if (state.country) {
-      const hc = CONFIG.teamCountry[f.home.toLowerCase()];
-      const ac = CONFIG.teamCountry[f.away.toLowerCase()];
-      if (hc !== state.country && ac !== state.country) return false;
+      if (countryOf(f.home) !== state.country && countryOf(f.away) !== state.country) return false;
     }
 
     // klub / tim spesifik
@@ -185,25 +195,25 @@ function isNational(f) {
 
 function matchCard(f) {
   const live = f.state === 'in';
-  const hasScore = f.homeScore !== null && f.awayScore !== null;
-  // Skor hanya tampil kalau pertandingan sudah mulai atau selesai. Placeholder
+  // Skor hanya tampil kalau pertandingan sudah mulai/selesai. Placeholder
   // "–" sengaja dihapus: ia terbaca seperti teks rusak, bukan informasi.
-  const showScore = (live || f.finished) && hasScore;
+  const showScore = (live || f.finished) &&
+    f.homeScore !== null && f.awayScore !== null;
 
-  // Tim yang memimpin ditandai bobot lebih tebal. Tanpa ini, pemenang dan
-  // yang kalah tampil sama sehingga kartu selesai tidak bisa dipindai.
+  // Tim yang memimpin dicetak tebal. Tanpa pembeda, laga selesai tampil
+  // rata dan tidak bisa dipindai sekilas.
   const hLead = showScore && f.homeScore > f.awayScore;
   const aLead = showScore && f.awayScore > f.homeScore;
-  const homeScore = showScore
-    ? `<span class="team__score${hLead ? ' is-lead' : ''}">${f.homeScore}</span>`
-    : '';
-  const awayScore = showScore
-    ? `<span class="team__score${aLead ? ' is-lead' : ''}">${f.awayScore}</span>`
-    : '';
+  const score = (v, lead) => (showScore
+    ? `<span class="team__score${lead ? ' is-lead' : ''}">${v}</span>`
+    : '');
 
-  // Bintang favorit: garis tipis saat belum aktif supaya 30-an kartu tidak
-  // terlihat seperti deretan wallpaper. Bentuknya SVG agar konsisten
-  // antar-font (karakter ☆/★ dirender beda-beda di tiap OS).
+  // Untuk timnas, nama negara == nama tim ("Fiji" / "Fiji") — mubazir.
+  // Label negara hanya berguna untuk KLUB, jadi sembunyikan di timnas.
+  const nat = f.compGroup === 'nasional';
+  const homeC = nat ? '' : countryOf(f.home);
+  const awayC = nat ? '' : countryOf(f.away);
+
   const fav = isFav(f.home);
   const star = `<button class="star${fav ? ' is-fav' : ''}" data-fav="${esc(f.home)}" `
     + `aria-label="${fav ? 'Hapus dari' : 'Tambah ke'} favorit: ${esc(f.home)}" `
@@ -211,26 +221,28 @@ function matchCard(f) {
     + `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/></svg>`
     + `</button>`;
 
+  // Satu baris tim: nama (+ negara kecil di bawahnya) dan skor sejajar
+  // kanan. Grid 2 kolom membuat semua skor berbaris rapi antar kartu.
+  const team = (name, ctry, cls, sc) => `
+      <div class="team ${cls}">
+        <span class="team__name" title="${esc(name)}">${esc(name)}</span>
+        ${ctry ? `<span class="team__country">${esc(ctry)}</span>` : ''}
+        ${sc}
+      </div>`;
+
   return `
   <li>
     <article class="match${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}" data-id="${esc(f.id)}">
-      <div class="match__comp" title="${esc(f.compName)}">${esc(f.compBadge)}</div>
+      <span class="match__comp" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
       <div class="match__teams">
-        <div class="team team--home">
-          ${star}
-          <span class="team__name" title="${esc(f.home)}">${esc(f.home)}</span>
-          ${homeScore}
-        </div>
-        <div class="team team--away">
-          <span class="team__vs" aria-hidden="true">VS</span>
-          <span class="team__name" title="${esc(f.away)}">${esc(f.away)}</span>
-          ${awayScore}
-        </div>
+        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead))}
+        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead))}
       </div>
       <div class="match__time">
         <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>
         ${statusPill(f)}
       </div>
+      ${star}
     </article>
   </li>`;
 }
@@ -246,14 +258,24 @@ function renderList(list) {
     $('#list').innerHTML = '';
     const e = $('#empty');
     e.hidden = false;
-    e.className = 'state' + (state.online ? '' : ' state--offline');
-    e.innerHTML = state.online
-      ? `<svg class="state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 12h6"/></svg>
-         <h2 class="state__title">Tidak ada pertandingan</h2>
-         <p class="state__text">Tidak ada jadwal yang cocok dengan filter ini. Coba perluas rentang hari atau kosongkan pencarian.</p>`
-      : `<svg class="state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l20 20"/><circle cx="12" cy="12" r="9"/></svg>
+    // Tiga keadaan berbeda, tiga pesan berbeda. Menampilkan "tidak ada
+    // pertandingan" saat sync GAGAL adalah kebohongan yang membuat pengguna
+    // mengira filternya salah, bukan koneksinya.
+    const offline = !state.online;
+    e.className = 'state' + (offline ? ' state--offline'
+      : state.loadFailed ? ' state--error' : '');
+    e.innerHTML = offline
+      ? `<svg class="state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l20 20"/><circle cx="12" cy="12" r="9"/></svg>
          <h2 class="state__title">Sedang offline</h2>
-         <p class="state__text">Tidak ada cache tersimpan. Jadwal akan muncul otomatis begitu koneksi kembali.</p>`;
+         <p class="state__text">Tidak ada cache tersimpan. Jadwal akan muncul otomatis begitu koneksi kembali.</p>`
+      : state.loadFailed
+      ? `<svg class="state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+         <h2 class="state__title">Gagal memuat jadwal</h2>
+         <p class="state__text">Tidak bisa menghubungi sumber data. Periksa koneksi internet, lalu coba lagi.</p>
+         <button class="state__retry" id="retry" type="button">Coba lagi</button>`
+      : `<svg class="state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 12h6"/></svg>
+         <h2 class="state__title">Tidak ada pertandingan</h2>
+         <p class="state__text">Tidak ada jadwal yang cocok dengan filter ini. Coba perluas rentang hari atau kosongkan pencarian.</p>`;
     $('#count').textContent = '0';
     return;
   }
@@ -325,7 +347,7 @@ function renderFilters() {
   const countries = new Map();
   for (const f of state.fixtures) {
     for (const t of [f.home, f.away]) {
-      const c = CONFIG.teamCountry[t.toLowerCase()];
+      const c = countryOf(t);
       if (c) countries.set(c, (countries.get(c) || 0) + 1);
     }
   }
@@ -482,6 +504,7 @@ function setSync(stateName, text) {
 async function sync({ force = false, silent = false } = {}) {
   if (state.loading) return;
   state.loading = true;
+  state.loadFailed = false;
   setSync('loading', 'Menyinkron…');
 
   try {
@@ -513,6 +536,7 @@ async function sync({ force = false, silent = false } = {}) {
     checkNotifications();
   } catch (err) {
     console.error(err);
+    state.loadFailed = true;
     setSync('offline', 'Gagal');
     if (!silent) toast('Gagal mengambil jadwal. Coba lagi nanti.');
     if (state.fixtures.length === 0) renderList([]);
@@ -569,6 +593,11 @@ function bind() {
     toggleFav(s.dataset.fav);
     update();
     toast(isFav(s.dataset.fav) ? `${s.dataset.fav} masuk favorit` : `${s.dataset.fav} dihapus dari favorit`);
+  });
+
+  // Coba lagi saat sync gagal (tombol dirender dinamis di #empty)
+  $('#empty').addEventListener('click', (e) => {
+    if (e.target.closest('#retry')) sync({ force: true });
   });
 
   // Favorit saja
