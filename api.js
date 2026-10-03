@@ -149,6 +149,15 @@ function normalizeEspn(ev, comp) {
 
   const compName = comp ? comp.name : (ev.league?.name || 'Lainnya');
   const cls = classifyComp(compName);
+  // Grup dari config bersifat OTORITATIF untuk ESPN: kalau config sudah
+  // menandai sebuah kompetisi sebagai 'nasional', jangan biarkan pola nama
+  // menurunkannya jadi 'liga'. Tanpa ini, chip "Tim Nasional" (dari grup)
+  // dan chip "Timnas" (dari jenis) menampilkan ANGKA BERBEDA untuk hal yang
+  // sama — terlihat seperti data rusak.
+  if (comp && comp.group === 'nasional') {
+    cls.kind = 'national';
+    cls.group = 'nasional';
+  }
 
   return {
     id: 'espn-' + String(ev.id),
@@ -223,7 +232,12 @@ function normalizeFifa(m) {
   const cls = classifyComp(compName);
   // Babak: StageName sering hanya mengulang nama kompetisi; GroupName memuat
   // "Final"/"Group A". Ambil yang paling informatif.
-  const stage = stageID(stageLabel(fifaText(m.GroupName), fifaText(m.StageName)));
+  let stage = stageID(stageLabel(fifaText(m.GroupName), fifaText(m.StageName)));
+  // Beberapa sumber mengisi stage dengan nama kompetisi itu sendiri
+  // ("Friendlies 1" untuk kompetisi "Friendlies") — mubazir dan
+  // membingungkan, jadi dibuang.
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+  if (stage && norm(compName).startsWith(norm(stage).replace(/\d+$/, ''))) stage = '';
 
   return {
     id: 'fifa-' + String(m.IdMatch),

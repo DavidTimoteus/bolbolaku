@@ -157,11 +157,8 @@ function applyFilters() {
     // range=3 -> d 0,1,2 (hari ini, besok, lusa).
     if (d < 0 || d >= state.range) return false;
 
-    // grup
-    if (state.group !== 'semua') {
-      const comp = CONFIG.competitions.find((c) => c.id === f.compId);
-      if (!comp || comp.group !== state.group) return false;
-    }
+    // grup — pakai compGroup laga supaya sumber mana pun ikut terhitung
+    if (state.group !== 'semua' && f.compGroup !== state.group) return false;
 
     // kompetensi spesifik
     if (state.comps.size && !state.comps.has(f.compId)) return false;
@@ -433,10 +430,14 @@ function renderFilters() {
   // Grup. Chip ber-jumlah nol disembunyikan: menawarkan filter yang
   // dijamin kosong hanya membuat UI terasa belum jadi.
   $('#groupstrip').innerHTML = CONFIG.groups.map((g) => {
+    // Dihitung dari f.compGroup (melekat pada tiap laga), BUKAN dari
+    // CONFIG.competitions. Laga dari sumber kedua (FIFA) tidak ada di
+    // CONFIG, sehingga pencarian lewat CONFIG membuat chip "Tim Nasional"
+    // menampilkan angka lebih kecil daripada chip "Timnas" — dua angka
+    // berbeda untuk hal yang sama, terbaca seperti data rusak.
     const n = g.id === 'semua'
       ? state.fixtures.length
-      : state.fixtures.filter((f) =>
-          CONFIG.competitions.find((c) => c.id === f.compId)?.group === g.id).length;
+      : state.fixtures.filter((f) => f.compGroup === g.id).length;
     if (n === 0 && g.id !== 'semua') return '';
     return `<button class="chip" role="tab" aria-pressed="${active === g.id}" data-group="${g.id}">${esc(g.label)}<span class="chip__count">${n}</span></button>`;
   }).join('');

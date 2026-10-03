@@ -423,7 +423,7 @@ button, input, select { font: inherit; color: inherit; background: none; border:
 .match__ribbon {
   display: flex; align-items: center; gap: var(--s-2);
   min-width: 0;
-  padding-right: 38px;               /* ruang untuk bintang favorit */
+  padding-right: 42px;               /* ruang untuk bintang favorit */
 }
 .match__badge {
   font-family: var(--f-mono);
@@ -488,10 +488,13 @@ button, input, select { font: inherit; color: inherit; background: none; border:
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--s-3);
 }
+/* Label jenis di kartu (mis. "Antarklub", "Liga") harus jadi konteks
+   sekunder — sebelumnya memakai warna aksen penuh sehingga menyaingi
+   nama tim dan mengganggu pembacaan. */
 .match__tag {
-  font-size: var(--t-2xs); font-weight: 700;
+  font-size: var(--t-2xs); font-weight: 600;
   letter-spacing: .07em; text-transform: uppercase;
-  color: var(--kind, var(--c-text-3));
+  color: var(--c-text-3);
 }
 .match__teams { display: grid; gap: var(--s-2); min-width: 0; }
 
