@@ -342,10 +342,14 @@ button, input, select { font: inherit; color: inherit; background: none; border:
   color: var(--c-text); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .match--live .match__clock { color: var(--c-live); }
-/* Jam kick-off yang belum diumumkan: jangan tampilkan jam karangan
-   (00:00Z dari FIFA terbaca sebagai "07.00" — puluhan laga "pagi buta"
-   yang terlihat seperti bug data). */
-.match__clock--tbd { color: var(--c-text-3); font-weight: 600; letter-spacing: .06em; }
+/* Jam kick-off yang belum diumumkan. Ditulis "TBD" SENDIRIAN (tanpa "VS"):
+   "VS TBD" terbaca seolah TBD adalah nama tim lawan. */
+.match__tbd {
+  font-family: var(--f-display); font-size: var(--t-sm); font-weight: 700;
+  letter-spacing: .1em; color: var(--c-text-3);
+  border: 1px dashed var(--c-line-2); border-radius: var(--r-xs);
+  padding: 2px 8px;
+}
 
 /* ---------- duel: tim | SKOR | tim ---------- */
 .match__duel {

@@ -333,10 +333,14 @@ function matchCard(f) {
   } else if (showScore) {
     mid = `<span class="match__score">${f.homeScore}<i>·</i>${f.awayScore}</span>`;
   } else {
-    const when = f.timeTBD ? 'TBD' : WIB.format(new Date(f.dateUTC));
-    mid = `<span class="match__vs">VS</span>
-           <span class="match__clock${f.timeTBD ? ' match__clock--tbd' : ''}"
-                 ${f.timeTBD ? 'title="Jam kick-off belum diumumkan"' : ''}>${when}</span>`;
+    // Belum kick-off. Jam yang belum diumumkan ditulis "TBD" TANPA "VS" di
+    // sebelahnya: "VS TBD" terbaca seolah TBD adalah nama lawan.
+    if (f.timeTBD) {
+      mid = `<span class="match__tbd" title="Jam kick-off belum diumumkan">TBD</span>`;
+    } else {
+      mid = `<span class="match__vs">VS</span>
+           <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>`;
+    }
   }
 
   // Baris meta HANYA untuk laga selesai. Menit berjalan sudah tampil di
