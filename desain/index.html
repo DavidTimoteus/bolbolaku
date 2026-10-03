@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BolBolaKu — Pilih Arah Desain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:#0a0a0f;color:#fff;font-family:'Archivo',system-ui,sans-serif;
+       line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px 16px 64px}
+  .w{max-width:900px;margin:0 auto}
+  h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;letter-spacing:-.02em;margin:0 0 8px}
+  .sub{color:#9aa0ad;font-size:15px;max-width:60ch;margin:0 0 8px}
+  .note{color:#6f7480;font-size:13px;margin:0 0 28px}
+  .grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+  a.card{display:block;text-decoration:none;color:inherit;background:#14161d;
+         border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 18px 16px;
+         transition:border-color .15s,transform .15s}
+  a.card:hover{border-color:rgba(255,255,255,.3);transform:translateY(-2px)}
+  a.card h2{margin:0 0 6px;font-size:17px;font-weight:700}
+  a.card p{margin:0;color:#9aa0ad;font-size:13.5px}
+  .swatch{display:flex;gap:5px;margin:12px 0 0}
+  .swatch span{width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.14)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;
+       text-transform:uppercase;color:#86efac;border:1px solid currentColor;
+       border-radius:999px;padding:2px 8px;margin-bottom:10px}
+  .foot{margin-top:28px;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);
+        color:#6f7480;font-size:13px}
+  .foot a{color:#86efac}
+  code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="w">
+  <span class="tag">Pilih arah desain</span>
+  <h1>BolBolaKu — 3 arah desain baru</h1>
+  <p class="sub">Tiap arah punya <strong>mode gelap dan mode terang</strong> (tombol di kanan atas halaman). Ketiganya sengaja dibuat <em>berbeda total</em> dari desain lama — bukan kartu "aksen kiri + baris header + baris isi" yang Anda keluhkan mirip menu Utang.</p>
+  <p class="note">Buka di HP juga — semuanya responsif. Buka satu arah, lalu tekan tombol <strong>☾ Gelap / ☀ Terang</strong>.</p>
+
+  <div class="grid">
+    <a class="card" href="probe-A.html">
+      <h2>A — Papan Skor Siaran</h2>
+      <p>Skor jadi raksasa di tengah, nama tim di kiri-kanan dengan blok warna tim. Terasa seperti lower-third siaran TV.</p>
+      <div class="swatch"><span style="background:#ffd166"></span><span style="background:#2f6df6"></span><span style="background:#e5484d"></span><span style="background:#14181d"></span></div>
+    </a>
+    <a class="card" href="probe-B.html">
+      <h2>B — Koran Olahraga</h2>
+      <p>Tanpa kartu sama sekali. Baris tipis dengan garis pemisah, seperti tabel hasil di koran olahraga.</p>
+      <div class="swatch"><span style="background:#d64545"></span><span style="background:#f4f1ea"></span><span style="background:#131315"></span><span style="background:#a29e94"></span></div>
+    </a>
+    <a class="card" href="probe-C.html">
+      <h2>C — Peta Kompetisi</h2>
+      <p>Kompetisi jadi unit utama: tiap kompetisi punya blok warna sendiri, laga tampil sebagai baris di dalamnya.</p>
+      <div class="swatch"><span style="background:#0f7b4f"></span><span style="background:#c2410c"></span><span style="background:#7a2fb8"></span><span style="background:#0b5fa5"></span></div>
+    </a>
+    <a class="card" href="../">
+      <h2>→ Kembali ke situs</h2>
+      <p>Jadwal sepak bola versi sekarang (desain lama, untuk pembanding).</p>
+      <div class="swatch"><span style="background:#22c55e"></span><span style="background:#141b28"></span><span style="background:#0a0e16"></span></div>
+    </a>
+  </div>
+
+  <p class="foot">Semua data pertandingan di halaman ini <strong>asli</strong>, diambil dari jadwal live — bukan contoh karangan. Laga "live &amp; selesai" ditandai <code>PRATINJAU</code> karena hanya untuk memperlihatkan bentuk kartu saat ada skor.</p>
+</div>
+</body>
+</html>
