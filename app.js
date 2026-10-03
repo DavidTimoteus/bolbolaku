@@ -258,34 +258,34 @@ window.bbkLogoErr = (img) => {
 };
 
 /**
- * Kartu pertandingan — TIGA tata letak berbeda menurut jenis kompetisi.
+ * Warna identitas tim — deterministik dari nama, supaya klub yang sama
+ * selalu dapat warna yang sama di seluruh halaman. Dipakai untuk "stripe"
+ * kecil di samping nama tim: penanda identitas, bukan hiasan acak.
+ */
+function teamColor(name) {
+  const s = String(name || '?');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+  return `hsl(${h} 62% 55%)`;
+}
+
+/**
+ * Kartu pertandingan — "Papan Skor Siaran".
  *
- * Mengapa berbeda: laga timnas (mis. final ASEAN Cup Indonesia vs Thailand),
- * laga piala antarklub (UCL/UEL), dan laga liga domestik punya konteks yang
- * berbeda. Menampilkannya identik membuat pengguna bingung membedakan mana
- * yang turnamen dan mana yang liga — keluhan yang sah.
+ * Satu struktur untuk semua jenis laga (dipilih pengguna setelah
+ * membandingkan 3 arah di /desain/): skor jadi elemen terbesar di TENGAH,
+ * dua tim mengapit kiri-kanan, masing-masing dengan garis warna identitas.
+ * Jenis kompetisi dibedakan lewat warna badge + garis atas kartu, bukan
+ * dengan mengubah tata letak (menjaga ritme pemindaian tetap sama).
  *
- *   kind = 'national'  -> kartu bendera: dua panji negara + nama negara
- *   kind = 'club-cup'  -> kartu turnamen: pita babak (Final/Semifinal) +
- *                         label "Antarklub" yang menonjol
- *   kind = 'league'    -> kartu liga ringkas: kresta + nama klub (default)
+ *   kind = 'national'  -> garis emas
+ *   kind = 'club-cup'  -> garis violet
+ *   kind = 'league'    -> garis hijau
  */
 function matchCard(f) {
   const live = f.state === 'in';
   const showScore = (live || f.finished) &&
     f.homeScore !== null && f.awayScore !== null;
-
-  const hLead = showScore && f.homeScore > f.awayScore;
-  const aLead = showScore && f.awayScore > f.homeScore;
-  const score = (v, lead) => (showScore
-    ? `<span class="team__score${lead ? ' is-lead' : ''}">${v}</span>`
-    : '');
-
-  // Label negara hanya bermakna untuk KLUB. Untuk timnas, nama tim == nama
-  // negara ("Fiji" / "Fiji") sehingga label itu mubazir.
-  const nat = f.compKind === 'national';
-  const homeC = nat ? '' : countryOf(f.home);
-  const awayC = nat ? '' : countryOf(f.away);
 
   const fav = isFav(f.home);
   const star = `<button class="star${fav ? ' is-fav' : ''}" data-fav="${esc(f.home)}" `
@@ -294,76 +294,75 @@ function matchCard(f) {
     + `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/></svg>`
     + `</button>`;
 
-  const team = (name, ctry, cls, sc, logo) => `
-      <div class="team ${cls}">
-        ${logoHTML(logo, name)}
-        <span class="team__id">
-          <span class="team__name" title="${esc(name)}">${esc(name)}</span>
-          ${ctry ? `<span class="team__country">${esc(ctry)}</span>` : ''}
-        </span>
-        ${sc}
-      </div>`;
+  const nat = f.compKind === 'national';
+  const homeC = nat ? '' : countryOf(f.home);
+  const awayC = nat ? '' : countryOf(f.away);
 
-  const timeBlock = `
-        <span class="match__time">
-          <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>
-          ${statusPill(f)}
-        </span>`;
+  // Tim kandang: garis warna, logo, lalu nama.
+  const homeTeam = `
+        <div class="match__team match__team--home" style="--side:${teamColor(f.home)}">
+          <span class="stripe" aria-hidden="true"></span>
+          ${logoHTML(f.homeLogo, f.home)}
+          <span class="team__id">
+            <span class="team__name" title="${esc(f.home)}">${esc(f.home)}</span>
+            ${homeC ? `<span class="team__country">${esc(homeC)}</span>` : ''}
+          </span>
+        </div>`;
 
-  // Kepala kartu — pita identitas kompetisi. Satu-satunya elemen yang
-  // selalu tampil, sehingga tiap jenis laga bisa dibedakan sekilas.
-  const head = `
+  // Tim tamu: cermin. Urutan anak DIBALIK (nama, logo, garis) supaya nama
+  // dapat seluruh ruang kolom kanan — bukan terjepit di kolom garis.
+  const awayTeam = `
+        <div class="match__team match__team--away" style="--side:${teamColor(f.away)}">
+          <span class="team__id">
+            <span class="team__name" title="${esc(f.away)}">${esc(f.away)}</span>
+            ${awayC ? `<span class="team__country">${esc(awayC)}</span>` : ''}
+          </span>
+          ${logoHTML(f.awayLogo, f.away)}
+          <span class="stripe" aria-hidden="true"></span>
+        </div>`;
+
+  // Tengah kartu — satu lapis informasi saja per keadaan:
+  //   belum mulai -> "VS" + jam kick-off
+  //   berjalan    -> skor besar + menit berjalan
+  //   selesai     -> skor besar saja (jam kick-off tak lagi relevan dan
+  //                  membuat kolom tengah jadi tiga lapis yang ramai)
+  let mid;
+  if (showScore && live) {
+    mid = `<span class="match__score">${f.homeScore}<i>·</i>${f.awayScore}</span>
+           ${statusPill(f)}`;
+  } else if (showScore) {
+    mid = `<span class="match__score">${f.homeScore}<i>·</i>${f.awayScore}</span>`;
+  } else {
+    mid = `<span class="match__vs">VS</span>
+           <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>`;
+  }
+
+  // Baris meta HANYA untuk laga selesai. Menit berjalan sudah tampil di
+  // kolom tengah (laga live), dan babak sudah tampil di kepala kartu —
+  // mengulanginya di sini adalah duplikasi yang memakan ruang.
+  const meta = f.finished ? `<div class="match__meta">${statusPill(f)}</div>` : '';
+
+  const kindClass = f.compKind === 'national' ? 'match--national'
+    : f.compKind === 'club-cup' ? 'match--cup' : 'match--league';
+
+  return `
+  <li>
+    <article class="match ${kindClass}${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}"
+             data-id="${esc(f.id)}" data-kind="${esc(f.compKind || 'league')}">
       <div class="match__head">
         <span class="match__badge" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
         <span class="match__compname" title="${esc(f.compName)}">${esc(f.compName)}</span>
         ${notableStage(f.stage) ? `<span class="match__stage">${esc(f.stage)}</span>` : ''}
-      </div>`;
-
-  const article = (kindClass, body) => `
-  <li>
-    <article class="match ${kindClass}${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}"
-             data-id="${esc(f.id)}" data-kind="${esc(f.compKind || 'league')}">
-      ${head}
-      ${body}
+      </div>
+      <div class="match__duel">
+        ${homeTeam}
+        <div class="match__mid">${mid}</div>
+        ${awayTeam}
+      </div>
+      ${meta}
       ${star}
     </article>
   </li>`;
-
-  // ---------- (A) TIMNAS / TURNAMEN ANTARNEGARA ----------
-  // Dua panji berhadapan simetris. Skor besar di tengah saat laga
-  // berjalan/selesai; jam kick-off saat belum mulai.
-  if (nat) {
-    const mid = showScore
-      ? `<span class="match__score">${f.homeScore}<i>–</i>${f.awayScore}</span>
-         <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>`
-      : timeBlock;
-    return article('match--national', `
-      <div class="match__duel">
-        <div class="match__side match__side--home">
-          ${logoHTML(f.homeLogo, f.home)}
-          <span class="match__nation" title="${esc(f.home)}">${esc(f.home)}</span>
-        </div>
-        <div class="match__mid">${mid}</div>
-        <div class="match__side match__side--away">
-          ${logoHTML(f.awayLogo, f.away)}
-          <span class="match__nation" title="${esc(f.away)}">${esc(f.away)}</span>
-        </div>
-      </div>`);
-  }
-
-  // ---------- (B) PIALA ANTARKLUB (UCL / UEL / Libertadores) ----------
-  // (C) LIGA DOMESTIK (default)
-  // Waktu kick-off jadi kolom KIRI yang tetap — pola "scoreboard" yang
-  // dipakai FotMob/Flashscore: mata memindai jam lebih dulu, lalu tim.
-  const kindClass = f.compKind === 'club-cup' ? 'match--cup' : 'match--league';
-  return article(kindClass, `
-      <div class="match__body">
-        <div class="match__when">${timeBlock}</div>
-        <div class="match__teams">
-          ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
-          ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
-        </div>
-      </div>`);
 }
 
 function renderList(list) {
@@ -790,6 +789,30 @@ function bind() {
       state.favOnly = false;
     }
     update();
+  });
+
+  // Tema gelap/terang. Atribut data-theme sudah dipasang oleh skrip kecil
+  // di <head> (mencegah kedipan), di sini kita hanya menyinkronkan tombol
+  // dan menyimpan pilihan pengguna.
+  const themeBtn = $('#theme');
+  const themeIcon = $('#theme-icon');
+  const SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>';
+  const MOON = '<path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a6.9 6.9 0 0 0 11.1 11.1z"/>';
+  const paintTheme = () => {
+    const light = document.documentElement.getAttribute('data-theme') === 'light';
+    themeBtn.setAttribute('aria-pressed', String(light));
+    themeBtn.setAttribute('aria-label', light ? 'Ganti ke tema gelap' : 'Ganti ke tema terang');
+    themeBtn.setAttribute('title', light ? 'Ganti ke tema gelap' : 'Ganti ke tema terang');
+    if (themeIcon) themeIcon.innerHTML = light ? MOON : SUN;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', light ? '#eef0f3' : '#0b0d10');
+  };
+  paintTheme();
+  themeBtn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('bbk-theme', next); } catch (e) {}
+    paintTheme();
   });
 
   // Notifikasi. Tombol lonceng di header; aria-pressed menandai

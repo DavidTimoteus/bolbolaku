@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Jadwal sepak bola pria: Premier League, LaLiga, Serie A, Champions League, Eredivisie, Liga Europa, dan timnas. Jam selalu WIB.">
-<meta name="theme-color" content="#080d18">
+<meta name="theme-color" content="#0b0d10">
 <title>BolBolaKu — Jadwal Sepak Bola</title>
 
 <link rel="manifest" href="./manifest.webmanifest">
@@ -13,8 +13,22 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="./styles.css">
+
+<!-- Terapkan tema SEBELUM cat pertama, supaya tidak ada kedipan putih
+     (FOUC) saat pengguna memilih tema terang. -->
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('bbk-theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
@@ -39,6 +53,15 @@
         <label class="sr-only" for="search">Cari tim, liga, atau stadion</label>
         <input id="search" class="search__input" type="search" placeholder="Cari tim atau liga…" autocomplete="off">
       </div>
+
+      <!-- Tema gelap/terang. Pilihan disimpan di localStorage supaya tidak
+           berubah saat halaman dimuat ulang. -->
+      <button class="iconbtn" id="theme" aria-label="Ganti tema gelap atau terang"
+              title="Ganti tema" aria-pressed="false">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a6.9 6.9 0 0 0 11.1 11.1z"/>
+        </svg>
+      </button>
 
       <!-- Notifikasi adalah AKSI, bukan filter. Karena itu ia tinggal di
            header sebagai tombol lonceng, bukan tercampur dengan chip rentang
