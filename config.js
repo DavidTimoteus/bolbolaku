@@ -5,16 +5,18 @@
  * lain yang perlu disentuh. Semua slug di bawah sudah diuji live terhadap
  * ESPN scoreboard endpoint (lihat docs/BLUEPRINT.md untuk hasil ujinya).
  *
- * Kolom `priority` mengatur urutan tampil: Liga négative (a) di atas
- *-containment konten lokal.
+ * Kolom `priority` mengatur urutan tampil: angka lebih kecil = lebih atas.
+ * Kompetisi dengan `featured: true` diberi penekanan di UI.
  */
 
 export const CONFIG = {
   appName: 'BolBolaKu',
   version: '1.0.0',
 
-  /** Jendela aggravate jadwal yang ditarik dari API. */
-  horizonDays: 14,
+  /** Jendela jadwal yang ditarik dari API.
+   *  Hanya hari ini + besok + lusa. Rentang panjang membebani jaringan
+   *  tanpa manfaat: pengguna hampir selalu melihat 3 hari terdekat. */
+  horizonDays: 3,
 
   /** TTL cache lokal (ms). 6 jam. */
   cacheTtlMs: 6 * 60 * 60 * 1000,
@@ -52,7 +54,10 @@ export const CONFIG = {
    * badge  : 2 huruf untuk badge ringkas
    */
   competitions: [
-    // ---------- LigaEuropa (grup utama) ----------
+    // ---------- INDONESIA (paling atas: pengguna utama dari Indonesia) ----------
+    { id: 'idn1',     name: 'Liga 1 Indonesia', short: 'IDN',  slug: 'idn.1',  group: 'indonesia', country: 'Indonesia', badge: 'IDN', live: true, priority: 0, featured: true },
+
+    // ---------- Liga Eropa (grup utama) ----------
     { id: 'epl',      name: 'Premier League',   short: 'EPL',  slug: 'eng.1',            group: 'liga',   country: 'England',          badge: 'EN', live: true,  priority: 1 },
     { id: 'laliga',   name: 'LaLiga',           short: 'LAL',  slug: 'esp.1',            group: 'liga',   country: 'Spanyol',          badge: 'ES', live: true,  priority: 2 },
     { id: 'seriea',   name: 'Serie A',          short: 'SEA',  slug: 'ita.1',            group: 'liga',   country: 'Italia',           badge: 'IT', live: true,  priority: 3 },
@@ -73,7 +78,7 @@ export const CONFIG = {
     { id: 'jleague',  name: 'J-League',         short: 'JPN',  slug: 'jpn.1',            group: 'asia',    country: 'Jepang',           badge: 'JP', live: true,  priority: 23 },
     { id: 'aleague',  name: 'A-League',         short: 'AUS',  slug: 'aus.1',            group: 'asia',    country: 'Australia',        badge: 'AU', live: true,  priority: 24 },
 
-    // ----------ropa ----------
+    // ---------- Eropa ----------
     { id: 'ucl',      name: 'Champions League', short: 'UCL',  slug: 'uefa.champions',   group: 'europa', country: 'Eropa',            badge: 'UCL', live: true,  priority: 5,  featured: true },
     { id: 'uel',      name: 'Europa League',    short: 'UEL',  slug: 'uefa.europa',      group: 'europa', country: 'Eropa',            badge: 'UEL', live: true,  priority: 6,  featured: true },
     { id: 'uecl',     name: 'Conference Lg',    short: 'UEC',  slug: 'uefa.europa.conf', group: 'europa', country: 'Eropa',            badge: 'UEC', live: true,  priority: 7,  featured: true },
@@ -115,7 +120,8 @@ export const CONFIG = {
 
   /** Label grup untuk UI. */
   groups: [
-    { id: 'semua',    label: 'Semua' },
+    { id: 'semua',     label: 'Semua' },
+    { id: 'indonesia', label: 'Indonesia' },
     { id: 'liga',     label: 'Liga' },
     { id: 'europa',   label: 'Eropa' },
     { id: 'nasional', label: 'Tim Nasional' },
@@ -211,8 +217,8 @@ export const CONFIG = {
   },
 
   /**
-   * NATIONAL_TEAMS — timnas yang punya jadwal di feed 'nasional' (dari uji live).
-   * Dipakai untuk badge jakarta cepat.
+   * NATIONAL_TEAMS — timnas yang punya jadwal di feed 'nasional'
+   * (dari uji live). Dipakai untuk label cepat.
    */
   nationalTeams: [
     'England', 'Spain', 'France', 'Germany', 'Portugal', 'Netherlands', 'Italy',

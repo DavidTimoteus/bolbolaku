@@ -126,6 +126,12 @@ function normalize(ev, comp) {
     dateUTC: ev.date,
     home: home.team?.displayName || home.team?.shortDisplayName || '?',
     away: away.team?.displayName || away.team?.shortDisplayName || '?',
+    // Logo kresta: pembeda terbesar antara tampilan amatir dan profesional.
+    // ESPN menyediakannya per tim di scoreboard (team.logo).
+    homeLogo: home.team?.logo || (home.team?.logos || [])[0]?.href || '',
+    awayLogo: away.team?.logo || (away.team?.logos || [])[0]?.href || '',
+    homeColor: home.team?.color ? '#' + home.team.color : '',
+    awayColor: away.team?.color ? '#' + away.team.color : '',
     homeScore: showScore ? hScore : null,
     awayScore: showScore ? aScore : null,
     state,

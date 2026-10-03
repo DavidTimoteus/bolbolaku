@@ -6,7 +6,7 @@
  * prefix slug ('esp.real_madrid' -> Spanyol); timnas memakai kode
  * 3 huruf ('fij' -> Fiji). Nama negara sudah dalam Bahasa Indonesia.
  *
- * 660 entri (660 klub + timnas).
+ * 664 entri (664 klub + timnas).
  */
 
 export const TEAM_COUNTRY = {
@@ -70,6 +70,7 @@ export const TEAM_COUNTRY = {
   "Bahamas": "Bahamas",
   "Bahia": "Brasil",
   "Bahrain": "Bahrain",
+  "Bali United": "Indonesia",
   "Bangladesh": "Bangladesh",
   "Barbados": "Barbados",
   "Barcelona": "Spanyol",
@@ -87,6 +88,7 @@ export const TEAM_COUNTRY = {
   "Bennekom": "Belanda",
   "Bermuda": "Bermuda",
   "Besiktas": "Turki",
+  "Bhayangkara Presisi": "Indonesia",
   "Birmingham City": "Inggris",
   "Blackburn Rovers": "Inggris",
   "Blackpool": "Inggris",
@@ -97,6 +99,7 @@ export const TEAM_COUNTRY = {
   "Bolton Wanderers": "Inggris",
   "Bolívar": "Bolivia",
   "Bonaire": "Bonaire",
+  "Borneo FC": "Indonesia",
   "Borussia Dortmund": "Jerman",
   "Borussia Mönchengladbach": "Jerman",
   "Bosnia-Herzegovina": "Bosnia-Herzegovina",
@@ -370,6 +373,7 @@ export const TEAM_COUNTRY = {
   "Macará": "Ekuador",
   "Macau": "Macao",
   "Madagascar": "Madagascar",
+  "Madura United FC": "Indonesia",
   "Mainz": "Jerman",
   "Malawi": "Malawi",
   "Maldives": "Maldives",

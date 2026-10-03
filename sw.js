@@ -9,7 +9,7 @@
  *    membuat data basi sulit dipurge.
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `bolbolaku-shell-${VERSION}`;
 
 const ASSETS = [

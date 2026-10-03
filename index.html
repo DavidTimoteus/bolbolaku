@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Jadwal sepak bola pria: Premier League, LaLiga, Serie A, Champions League, Eredivisie, Liga Europa, dan timnas. Jam selalu WIB.">
-<meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#080d18">
 <title>BolBolaKu — Jadwal Sepak Bola</title>
 
 <link rel="manifest" href="./manifest.webmanifest">
@@ -67,7 +67,7 @@
         <div class="strip" id="groupstrip" role="tablist" aria-labelledby="lbl-group"></div>
       </div>
 
-      <!-- Liga spesifik. Wrapper memberi affordance "ada ещё" saat
+      <!-- Liga spesifik. Wrapper memberi affordance "masih ada lagi" saat
            strip terpotong di layar sempit. -->
       <div class="filterrow">
         <span class="filterrow__label" id="lbl-comp">Liga</span>
@@ -89,8 +89,6 @@
         <div class="strip" id="ranges" role="group" aria-label="Rentang hari">
           <button class="chip" data-range="1">Hari ini</button>
           <button class="chip" data-range="3">3 hari</button>
-          <button class="chip" data-range="7">7 hari</button>
-          <button class="chip" data-range="14">14 hari</button>
         </div>
 
         <button class="chip" id="favonly" aria-pressed="false">
@@ -111,6 +109,7 @@
     <div class="countdown" id="countdown" hidden>
       <span class="countdown__label">Kick-off terdekat</span>
       <span class="countdown__clock" id="cd-clock">--:--:--</span>
+      <span class="countdown__teams" id="cd-teams"></span>
       <span class="countdown__meta" id="cd-meta"></span>
     </div>
 

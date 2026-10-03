@@ -8,7 +8,7 @@
 
 import { CONFIG } from './config.js';
 import { loadFixtures } from './api.js';
-import { TEAM_COUNTRY } from './country-map.js';
+import { TEAM_COUNTRY, COUNTRIES } from './country-map.js';
 
 /* ==================================================================
    State
@@ -26,7 +26,7 @@ const state = {
   country: '',
   team: '',
   query: '',
-  range: 7,                // hari ke depan
+  range: 3,                // hari yang ditampilkan (1=hari ini, 3=+besok+lusa)
   favOnly: false,          // hanya tampilkan match klub favorit
   favourites: new Set(),   // nama tim exact
   notified: new Set(),     // id match yang sudah dinotifikasi
@@ -48,6 +48,14 @@ const WIB = new Intl.DateTimeFormat('id-ID', {
 const DAY_SHORT = new Intl.DateTimeFormat('id-ID', {
   timeZone: CONFIG.timeZone,
   weekday: 'short',
+});
+// Header grup hari: "Sab, 3 Okt" — cukup ringkas agar tidak membungkus dua
+// baris di HP, tapi tetap memuat tanggal (bukan sekadar nama hari).
+const DAY_HEAD = new Intl.DateTimeFormat('id-ID', {
+  timeZone: CONFIG.timeZone,
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
 });
 const DAY_LONG = new Intl.DateTimeFormat('id-ID', {
   timeZone: CONFIG.timeZone,
@@ -144,7 +152,9 @@ function applyFilters() {
   return state.fixtures.filter((f) => {
     // rentang hari
     const d = daysAhead(f.dateUTC);
-    if (d < 0 || d > state.range) return false;
+    // range = JUMLAH hari yang ditampilkan (bukan batas atas), jadi
+    // range=3 -> d 0,1,2 (hari ini, besok, lusa).
+    if (d < 0 || d >= state.range) return false;
 
     // grup
     if (state.group !== 'semua') {
@@ -193,6 +203,38 @@ function isNational(f) {
   return f.compGroup === 'nasional';
 }
 
+/**
+ * Inisial 2 huruf dari nama tim — dipakai saat logo tidak tersedia,
+ * supaya kartu tidak pernah menampilkan kotak kosong.
+ */
+function initials(name) {
+  const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return String(name || '?').slice(0, 2).toUpperCase();
+}
+
+/**
+ * Logo kresta tim. ESPN menyediakannya per tim; kalau gagal dimuat,
+ * <img> diganti lencana inisial supaya tata letak tidak bergeser.
+ * alt="" karena nama tim sudah ada persis di sebelahnya (dekoratif).
+ */
+function logoHTML(url, name) {
+  const ini = esc(initials(name));
+  if (!url) return `<span class="team__logo team__logo--empty" aria-hidden="true">${ini}</span>`;
+  return `<img class="team__logo" src="${esc(url)}" alt="" width="26" height="26" `
+    + `loading="lazy" decoding="async" data-initials="${ini}" `
+    + `onerror="window.bbkLogoErr&&window.bbkLogoErr(this)">`;
+}
+
+/** Ganti logo yang gagal dimuat dengan lencana inisial. */
+window.bbkLogoErr = (img) => {
+  const s = document.createElement('span');
+  s.className = 'team__logo team__logo--empty';
+  s.setAttribute('aria-hidden', 'true');
+  s.textContent = img.dataset.initials || '?';
+  img.replaceWith(s);
+};
+
 function matchCard(f) {
   const live = f.state === 'in';
   // Skor hanya tampil kalau pertandingan sudah mulai/selesai. Placeholder
@@ -223,24 +265,29 @@ function matchCard(f) {
 
   // Satu baris tim: nama (+ negara kecil di bawahnya) dan skor sejajar
   // kanan. Grid 2 kolom membuat semua skor berbaris rapi antar kartu.
-  const team = (name, ctry, cls, sc) => `
+  const team = (name, ctry, cls, sc, logo) => `
       <div class="team ${cls}">
-        <span class="team__name" title="${esc(name)}">${esc(name)}</span>
-        ${ctry ? `<span class="team__country">${esc(ctry)}</span>` : ''}
+        ${logoHTML(logo, name)}
+        <span class="team__id">
+          <span class="team__name" title="${esc(name)}">${esc(name)}</span>
+          ${ctry ? `<span class="team__country">${esc(ctry)}</span>` : ''}
+        </span>
         ${sc}
       </div>`;
 
   return `
   <li>
     <article class="match${live ? ' match--live' : ''}${f.finished ? ' match--done' : ''}" data-id="${esc(f.id)}">
-      <span class="match__comp" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
-      <div class="match__teams">
-        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead))}
-        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead))}
+      <div class="match__meta">
+        <span class="match__comp" title="${esc(f.compName)}">${esc(f.compBadge)}</span>
+        <span class="match__time">
+          <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>
+          ${statusPill(f)}
+        </span>
       </div>
-      <div class="match__time">
-        <span class="match__clock">${WIB.format(new Date(f.dateUTC))}</span>
-        ${statusPill(f)}
+      <div class="match__teams">
+        ${team(f.home, homeC, 'team--home', score(f.homeScore, hLead), f.homeLogo)}
+        ${team(f.away, awayC, 'team--away', score(f.awayScore, aLead), f.awayLogo)}
       </div>
       ${star}
     </article>
@@ -300,7 +347,7 @@ function renderList(list) {
     return `
     <section class="daygroup" aria-labelledby="d-${key}">
       <header class="daygroup__head">
-        <h2 class="daygroup__date" id="d-${key}">${esc(DAY_LONG.format(dt))}</h2>
+        <h2 class="daygroup__date" id="d-${key}" title="${esc(DAY_LONG.format(dt))}">${esc(DAY_HEAD.format(dt))}</h2>
         ${rel ? `<span class="daygroup__rel">${esc(rel)}</span>` : ''}
         <span class="daygroup__count">${items.length} pertandingan · ${CONFIG.timeZoneLabel}</span>
       </header>
@@ -343,18 +390,26 @@ function renderFilters() {
       ${esc(c.short)}<span class="chip__count">${n}</span></button>`;
   }).join('');
 
-  // Negara — hanya negara yang benar-benar muncul
-  const countries = new Map();
+  // Negara — DAFTAR LENGKAP. Negara yang punya jadwal 3 hari tampil lebih
+  // dulu (dengan jumlah), diikuti seluruh negara lain menurut abjad. Dengan
+  // cara ini negara seperti Indonesia selalu ada di dropdown, walau liganya
+  // sedang tidak bertanding — daftar yang "hilang" membuat app terasa rusak.
+  const counts = new Map();
   for (const f of state.fixtures) {
     for (const t of [f.home, f.away]) {
       const c = countryOf(t);
-      if (c) countries.set(c, (countries.get(c) || 0) + 1);
+      if (c) counts.set(c, (counts.get(c) || 0) + 1);
     }
   }
-  const sorted = Array.from(countries.entries()).sort((a, b) => b[1] - a[1]);
+  const withFx = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  const rest = COUNTRIES.filter((c) => !counts.has(c));
+  const opt = (c, n) =>
+    `<option value="${esc(c)}"${state.country === c ? ' selected' : ''}>`
+    + `${esc(c)}${n ? ` (${n})` : ''}</option>`;
   $('#country').innerHTML =
-    `<option value="">Semua negara</option>` +
-    sorted.map(([c, n]) => `<option value="${esc(c)}"${state.country === c ? ' selected' : ''}>${esc(c)} (${n})</option>`).join('');
+    `<option value="">Semua negara</option>`
+    + withFx.map(([c, n]) => opt(c, n)).join('')
+    + rest.map((c) => opt(c, 0)).join('');
 
   // Klub
   const teams = new Set();
@@ -405,7 +460,7 @@ function syncUrl() {
   if (state.country) p.set('n', state.country);
   if (state.team) p.set('t', state.team);
   if (state.query) p.set('q', state.query);
-  if (state.range !== 7) p.set('r', String(state.range));
+  if (state.range !== 3) p.set('r', String(state.range));
   const qs = p.toString();
   history.replaceState(null, '', qs ? '?' + qs : location.pathname);
 }
@@ -417,7 +472,7 @@ function readUrl() {
   state.country = p.get('n') || '';
   state.team = p.get('t') || '';
   state.query = p.get('q') || '';
-  state.range = Number(p.get('r')) || 7;
+  state.range = Number(p.get('r')) || 3;
 }
 
 /* ==================================================================
@@ -452,7 +507,15 @@ function tickCountdown() {
   $('#cd-clock').textContent =
     dd > 0 ? `${dd}h ${p2(hh)}:${p2(mm)}:${p2(ss)}`
            : `${p2(hh)}:${p2(mm)}:${p2(ss)}`;
-  $('#cd-meta').textContent = `${f.home} vs ${f.away} · ${f.compName}`;
+  // Identitas tim di kartu kick-off: logo + nama, sama seperti kartu lain.
+  $('#cd-teams').innerHTML =
+    `${logoHTML(f.homeLogo, f.home)}<span class="countdown__team">${esc(f.home)}</span>`
+    + `<span class="countdown__vs">vs</span>`
+    + `${logoHTML(f.awayLogo, f.away)}<span class="countdown__team">${esc(f.away)}</span>`;
+  // Jam kick-off eksplisit + kompetisi. Countdown saja tidak cukup: begitu
+  // hitungan habis, pengguna tak tahu persis kapan laga dimulai.
+  $('#cd-meta').textContent =
+    `${WIB.format(new Date(f.dateUTC))} ${CONFIG.timeZoneLabel} · ${f.compName}`;
 }
 
 /* ==================================================================
